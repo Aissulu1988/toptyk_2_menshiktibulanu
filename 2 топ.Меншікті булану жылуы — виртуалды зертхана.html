@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Меншікті булану жылуы — виртуалды зертхана</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#eef6fa;--card:#fff;--ink:#17323f;--mute:#5a7887;--line:#d5e5ee;--acc:#0b7f86;--hot:#e4572e;--ok:#2a9d5c;--grid:#e4eef4;--soft:#e6f3f6}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1c23;--card:#162a33;--ink:#e5f1f6;--mute:#93b0bd;--line:#2a4350;--grid:#233843;--soft:#1d3640}}
+:root[data-theme="dark"]{--bg:#0e1c23;--card:#162a33;--ink:#e5f1f6;--mute:#93b0bd;--line:#2a4350;--grid:#233843;--soft:#1d3640}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Trebuchet MS","Segoe UI",Tahoma,sans-serif;padding:18px 14px 40px}
+h1{font-size:22px;margin:0 0 4px}h2{font-size:16px;margin:0 0 10px}
+.q{color:var(--mute);max-width:70ch;margin:0 0 16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:14px;max-width:1100px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.wide{grid-column:1/-1}
+canvas{width:100%;height:auto;display:block;border-radius:10px;background:var(--soft)}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center}
+button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:9px 14px;background:var(--acc);color:#fff;cursor:pointer;min-height:40px}
+button.gray{background:var(--soft);color:var(--ink);border:1px solid var(--line)}
+button.sel{background:var(--acc);color:#fff;border-color:var(--acc)}
+button:disabled{opacity:.4;cursor:not-allowed}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+input[type=range]{width:100%;accent-color:var(--acc);height:34px}
+textarea{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:100%;min-height:54px;resize:vertical}
+.big{font-size:26px;font-weight:800}
+.Lbox{padding:10px 12px;border-radius:10px;background:var(--soft);margin-top:10px}
+.info{padding:12px;border-radius:10px;background:var(--soft);margin-top:10px;min-height:120px}
+.info div{margin:3px 0}.res{font-weight:800;font-size:17px;color:var(--acc)}
+ol.steps{margin:0;padding-left:0;list-style:none}ol.steps li{padding:6px 0 6px 30px;position:relative;border-bottom:1px solid var(--line)}
+ol.steps li:before{content:"";position:absolute;left:4px;top:9px;width:16px;height:16px;border-radius:50%;border:2px solid var(--line)}
+ol.steps li.done:before{background:var(--ok);border-color:var(--ok)}ol.steps li.done{color:var(--mute)}
+table{width:100%;border-collapse:collapse}th,td{border:1px solid var(--line);padding:6px;text-align:left}th{background:var(--soft)}
+td.pend{color:var(--mute)}
+.note{font-size:13px;color:var(--mute);margin:8px 0 0}
+label{display:block;font-weight:700;margin:10px 0 4px}
+#ans{margin-top:10px;padding:10px 12px;border-left:4px solid var(--ok);background:var(--soft);border-radius:6px}#ans p{margin:4px 0}
+</style>
+</head>
+<body>
+<h1>Меншікті булану жылуы — виртуалды зертхана</h1>
+<p class="q"><b>Зерттеу сұрағы:</b> сұйықты буға айналдыруға қажетті жылу мөлшері сұйықтың массасына және меншікті булану жылуына қалай тәуелді?</p>
+
+<div class="grid">
+<section class="card">
+  <h2>Тәжірибе</h2>
+  <canvas id="lab" aria-label="Сұйық құйылған ыдыс және қыздырғыш"></canvas>
+  <div class="bar"><button id="bCalc">Есептеу</button><button id="bReset" class="gray">Қайта бастау</button></div>
+  <p class="note">Сұйық қайнау температурасында тұр деп алынады. Тек буландыруға қажетті жылу есептеледі, қыздыруға кететін энергия ескерілмейді.</p>
+</section>
+
+<section class="card">
+  <h2>Параметрлер</h2>
+  <b>Сұйық түрі</b>
+  <div class="bar" id="liqs" role="group" aria-label="Сұйық түрі"></div>
+  <div class="Lbox"><div class="note" style="margin:0">Меншікті булану жылуы</div><div class="big" id="Lv"></div><div class="note" id="Lt"></div></div>
+  <label for="sl">Сұйықтың массасы: <span id="mv" class="big" style="font-size:20px"></span></label>
+  <input type="range" id="sl" min="50" max="1000" step="50" value="200">
+  <div class="bar" id="pre"></div>
+  <div class="info" id="info" aria-live="polite"></div>
+</section>
+
+<section class="card">
+  <h2>Q – m графигі</h2>
+  <canvas id="gr" aria-label="Жылу мөлшерінің массаға тәуелділік графигі"></canvas>
+  <p class="note">Түзудің көлбеулігі L-ге байланысты. Нүктелер – кестеге жазылған нәтижелер.</p>
+</section>
+
+<section class="card">
+  <h2>Зерттеу кезеңдері</h2>
+  <ol class="steps" id="steps">
+    <li>Судың массасын жүгірткімен таңда.</li>
+    <li>Меншікті булану жылуының мәнін қара (сұйық түрін таңдап көр).</li>
+    <li>«Есептеу» батырмасын басып, қажетті жылу мөлшерін анықта.</li>
+    <li>Массаны өзгертіп, есептеуді қайтала.</li>
+    <li>Нәтижелерді салыстырып, сұрақтарға жауап бер.</li>
+  </ol>
+</section>
+
+<section class="card wide">
+  <h2>Зерттеу кестесі</h2>
+  <table><thead><tr><th>Сұйық</th><th>Массасы</th><th>Меншікті булану жылуы</th><th>Қажетті жылу мөлшері</th></tr></thead><tbody id="tb"></tbody></table>
+  <p class="note">Кестедегі «–» орындарын толтыру үшін сол сұйық пен массаны таңдап, «Есептеу» бас. Басқа мәндерді таңдасаң, кестеге жаңа жол қосылады.</p>
+</section>
+
+<section class="card wide">
+  <h2>Қорытынды сұрақтары</h2>
+  <label for="q0">1. Сұйықтың массасы артқанда қажетті жылу мөлшері қалай өзгереді?</label><textarea id="q0"></textarea>
+  <label for="q1">2. Меншікті булану жылуы нені сипаттайды?</label><textarea id="q1"></textarea>
+  <label for="q2">3. Бірдей массадағы әртүрлі сұйықтарды буландыруға қажетті энергия бірдей бола ма?</label><textarea id="q2"></textarea>
+  <div class="bar"><button id="bCmp" disabled>Үлгі жауаппен салыстыру</button><span class="note" id="cmpNote">Кестеге кемінде 4 нәтиже жазғаннан кейін ашылады.</span></div>
+  <div id="ans" hidden>
+    <p><b>1.</b> Масса неше есе артса, Q да сонша есе артады: Q массаға тура пропорционал (Q = L · m). Мысалы, 0,1 кг судан 0,2 кг суға көшсек, Q екі есе өседі.</p>
+    <p><b>2.</b> Меншікті булану жылуы – қайнау температурасындағы 1 кг сұйықты буға айналдыруға қажетті жылу мөлшері. Ол сұйықтың түріне тәуелді шама.</p>
+    <p><b>3.</b> Жоқ. Мысалы, 0,5 кг үшін: су – 1,15·10⁶ Дж, спирт – 4,5·10⁵ Дж, эфир – 2·10⁵ Дж, сынап – 1,5·10⁵ Дж. L неғұрлым үлкен болса, Q соғұрлым көп.</p>
+  </div>
+</section>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const dpr=Math.min(2,window.devicePixelRatio||1);
+function cv(id,w,h){const c=$(id);c.width=w*dpr;c.height=h*dpr;const x=c.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);return x}
+const X=cv('lab',380,320),G=cv('gr',460,280);
+const css=getComputedStyle(document.documentElement),col=n=>css.getPropertyValue(n).trim();
+const R=(a,b)=>a+Math.random()*(b-a);
+const LQ=[{n:'Су',L:2.3e6,c:'#4fa8e8',t:'100'},{n:'Спирт',L:0.9e6,c:'#e9c46a',t:'78'},{n:'Эфир',L:0.4e6,c:'#b79df0',t:'35'},{n:'Сынап',L:0.3e6,c:'#aab4bd',t:'357'}];
+const SUP='⁰¹²³⁴⁵⁶⁷⁸⁹⁻';
+const sup=s=>String(s).replace(/./g,c=>SUP['0123456789-'.indexOf(c)]);
+const sci=v=>{v=Math.round(v);const e=Math.floor(Math.log10(v));let m=(v/Math.pow(10,e)).toFixed(2).replace(/0+$/,'').replace(/\.$/,'').replace('.',',');return m+'·10'+sup(e)};
+const num=v=>Math.round(v).toLocaleString('ru-RU');
+const kg=g=>(g/1000).toFixed(2).replace('.',',')+' кг';
+let li,g,rows,A,flags;
+
+function init(){
+  li=0;g=200;rows=[100,200,500].map(x=>({li:0,g:x,Q:null}));
+  A={run:false,p:0,bub:[],st:[],Q:0,done:false};flags={m:false,l:false};
+  $('sl').value=g;$('ans').hidden=true;renderLiq();renderTable();
+}
+function renderLiq(){
+  $('liqs').innerHTML='';
+  LQ.forEach((q,i)=>{const b=document.createElement('button');b.textContent=q.n;b.className=i==li?'sel':'gray';b.onclick=()=>{li=i;flags.l=true;stop();renderLiq()};$('liqs').appendChild(b)});
+  $('Lv').textContent='L = '+sci(LQ[li].L)+' Дж/кг';
+  $('Lt').textContent='Қайнау температурасы шамамен '+LQ[li].t+' °C. 1 кг '+LQ[li].n.toLowerCase()+' буға айналуы үшін '+num(LQ[li].L)+' Дж қажет.';
+}
+function renderPre(){
+  $('pre').innerHTML='<span class="note" style="margin:0">Жылдам таңдау:</span>';
+  [100,200,500].forEach(x=>{const b=document.createElement('button');b.className='gray';b.textContent=kg(x);b.onclick=()=>{g=x;$('sl').value=x;flags.m=true;stop()};$('pre').appendChild(b)});
+}
+renderPre();
+function renderTable(){
+  $('tb').innerHTML=rows.map(r=>`<tr><td>${LQ[r.li].n}</td><td>${kg(r.g)}</td><td>${sci(LQ[r.li].L)} Дж/кг</td>${r.Q==null?'<td class="pend">–</td>':`<td><b>${sci(r.Q)} Дж</b> (${num(r.Q)} Дж)</td>`}</tr>`).join('');
+}
+function stop(){A.run=false;A.p=0;A.done=false}
+$('sl').oninput=e=>{g=+e.target.value;flags.m=true;stop()};
+$('bCalc').onclick=()=>{
+  const Q=Math.round(LQ[li].L*g/1000);
+  let r=rows.find(r=>r.li==li&&r.g==g);if(r)r.Q=Q;else rows.push({li,g,Q});
+  renderTable();A.run=true;A.p=0;A.Q=Q;A.done=false;A.liq=li;A.g=g;
+};
+$('bReset').onclick=init;
+$('bCmp').onclick=()=>$('ans').hidden=false;
+
+function info(){
+  const q=LQ[li],Q=Math.round(q.L*g/1000);
+  let h=`<div>Формула: <b>Q = L · m</b></div><div>L = ${sci(q.L)} Дж/кг; m = ${kg(g)}</div><div>Q = ${sci(q.L)} × ${(g/1000).toFixed(2).replace('.',',')} = <span class="res">${sci(Q)} Дж</span></div><div class="note">${num(Q)} Дж = ${num(Q/1000)} кДж</div>`;
+  if(A.run)h+=`<div>Берілген жылу: <b>${num(A.Q*A.p)} Дж</b></div>`;
+  else if(A.done)h+='<div style="color:var(--ok);font-weight:700">Барлық сұйық буға айналды. Берілген жылу Q-ге тең. Нәтиже кестеге жазылды.</div>';
+  $('info').innerHTML=h;
+}
+
+function drawLab(time){
+  const x=X,d=A.run||A.done?A:null,gg=d?d.g:g,q=LQ[d?d.liq:li];
+  const f=.15+.85*gg/1000,H=170,lv=A.run?f*(1-A.p):A.done?0:f,top=240-H*lv;
+  x.clearRect(0,0,380,320);
+  x.fillStyle=A.run?col('--hot'):'#8ea0aa';x.fillRect(70,246,240,20);x.fillRect(90,266,10,22);x.fillRect(280,266,10,22);
+  if(A.run){const gr=x.createRadialGradient(190,258,5,190,258,130);gr.addColorStop(0,'rgba(255,120,40,.5)');gr.addColorStop(1,'rgba(255,120,40,0)');x.fillStyle=gr;x.fillRect(40,200,300,100)}
+  x.fillStyle=col('--mute');x.font='12px sans-serif';x.textAlign='center';x.fillText('Қыздырғыш: '+(A.run?'қосулы':'өшірулі'),190,308);
+  if(lv>0.005){x.fillStyle=q.c;x.beginPath();x.moveTo(100,240);x.lineTo(100,top);
+    for(let px=100;px<=280;px+=5)x.lineTo(px,top+(A.run?Math.sin(px*.15+time*9)*2:0));x.lineTo(280,240);x.closePath();x.fill()}
+  for(const p of A.bub){x.beginPath();x.arc(p.x,p.y,p.r,0,6.283);x.fillStyle='rgba(255,255,255,.6)';x.fill()}
+  x.strokeStyle=col('--ink');x.lineWidth=3;x.beginPath();x.moveTo(96,60);x.lineTo(100,240);x.lineTo(280,240);x.lineTo(284,60);x.stroke();
+  for(const p of A.st){x.beginPath();x.arc(p.x,p.y,p.r,0,6.283);x.fillStyle=`rgba(190,200,210,${.4*p.l/p.m})`;x.fill()}
+  x.fillStyle=col('--ink');x.font='bold 14px sans-serif';x.fillText(q.n+', m = '+kg(gg),190,24);
+  if(A.run||A.done){x.font='13px sans-serif';x.fillStyle=col('--acc');x.fillText('Q = '+num(A.Q*(A.run?A.p:1))+' Дж',190,44)}
+}
+function step(dt){
+  if(!A.run){A.bub=[];A.st=A.st.filter(p=>(p.l-=dt)>0);return}
+  A.p+=dt/4.5;
+  const f=.15+.85*A.g/1000,top=240-170*f*(1-A.p);
+  if(Math.random()<dt*30)A.bub.push({x:R(108,272),y:236,r:R(2,4),v:R(50,90)});
+  if(Math.random()<dt*22)A.st.push({x:R(105,275),y:top,r:5,l:1.8,m:1.8});
+  A.bub=A.bub.filter(p=>(p.y-=p.v*dt)>top+3);
+  A.st=A.st.filter(p=>{p.y-=35*dt;p.r+=12*dt;return(p.l-=dt)>0});
+  if(A.p>=1){A.p=1;A.run=false;A.done=true;A.bub=[]}
+}
+function drawGr(){
+  const x=G,W=460,H=280,l=54,b=34,r=14,t=16,Xm=m=>l+m*(W-l-r),Y=Q=>H-b-Q/2.3e6*(H-b-t);
+  x.clearRect(0,0,W,H);x.font='11px sans-serif';x.textAlign='right';
+  for(let v=0;v<=2;v+=.5){x.strokeStyle=col('--grid');x.beginPath();x.moveTo(l,Y(v*1e6));x.lineTo(W-r,Y(v*1e6));x.stroke();x.fillStyle=col('--mute');x.fillText(v+' МДж',l-5,Y(v*1e6)+4)}
+  x.textAlign='center';for(let m=0;m<=1;m+=.25){x.fillStyle=col('--mute');x.fillText(m.toFixed(2).replace('.',',')+' кг',Xm(m),H-b+14)}
+  x.fillText('Масса m',W/2,H-4);
+  LQ.forEach((q,i)=>{x.strokeStyle=q.c;x.lineWidth=i==li?4:1.5;x.globalAlpha=i==li?1:.55;x.beginPath();x.moveTo(Xm(0),Y(0));x.lineTo(Xm(1),Y(q.L));x.stroke();x.globalAlpha=1;
+    x.fillStyle=col('--mute');x.textAlign='right';x.fillText(q.n,W-r-2,Y(q.L)-4+(i>1?14:0))});
+  rows.forEach(rw=>{if(rw.Q==null)return;x.beginPath();x.arc(Xm(rw.g/1000),Y(rw.Q),6,0,6.283);x.fillStyle=LQ[rw.li].c;x.fill();x.strokeStyle=col('--ink');x.lineWidth=1.5;x.stroke()});
+  const Q=LQ[li].L*g/1000;x.beginPath();x.arc(Xm(g/1000),Y(Q),9,0,6.283);x.strokeStyle=col('--hot');x.lineWidth=2.5;x.stroke();
+}
+function ui(){
+  $('mv').textContent=kg(g);
+  const done=rows.filter(r=>r.Q!=null),q=[0,1,2].every(i=>$('q'+i).value.trim().length>3);
+  const two=LQ.some((_,i)=>new Set(done.filter(r=>r.li==i).map(r=>r.g)).size>=2);
+  const st=[flags.m,flags.l,done.length>=1,two,q];
+  document.querySelectorAll('#steps li').forEach((li,i)=>li.classList.toggle('done',st[i]));
+  $('bCmp').disabled=done.length<4;$('cmpNote').hidden=done.length>=4;
+}
+let prev=performance.now();
+function frame(n){const dt=Math.min(.05,(n-prev)/1000);prev=n;step(dt);drawLab(n/1000);drawGr();info();ui();requestAnimationFrame(frame)}
+init();requestAnimationFrame(frame);
+</script>
+</body>
+</html>
